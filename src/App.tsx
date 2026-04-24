@@ -2,24 +2,24 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 function App() {
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-  const [cities, setCities] = useState([]);
+  const [countries, setCountries] = useState<string[]>([]);
+  const [states, setStates] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
 
-  const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedState, setSelectedState] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
 
-  // Load Countries
   useEffect(() => {
     fetch("https://location-selector.labs.crio.do/countries")
       .then((res) => res.json())
-      .then((data) => setCountries(data))
-      .catch((err) => console.log(err));
+      .then((data: string[]) => setCountries(data))
+      .catch((err) => console.error("Countries error:", err));
   }, []);
 
-  // Country Change
-  const handleCountryChange = async (e) => {
+  const handleCountryChange = async (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const country = e.target.value;
 
     setSelectedCountry(country);
@@ -30,15 +30,20 @@ function App() {
 
     if (!country) return;
 
-    const res = await fetch(
-      `https://location-selector.labs.crio.do/country=${country}/states`
-    );
-    const data = await res.json();
-    setStates(data);
+    try {
+      const res = await fetch(
+        `https://location-selector.labs.crio.do/country=${country}/states`
+      );
+      const data: string[] = await res.json();
+      setStates(data);
+    } catch (err) {
+      console.error("States error:", err);
+    }
   };
 
-  // State Change
-  const handleStateChange = async (e) => {
+  const handleStateChange = async (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const state = e.target.value;
 
     setSelectedState(state);
@@ -47,11 +52,19 @@ function App() {
 
     if (!state) return;
 
-    const res = await fetch(
-      `https://location-selector.labs.crio.do/country=${selectedCountry}/state=${state}/cities`
-    );
-    const data = await res.json();
-    setCities(data);
+    try {
+      const res = await fetch(
+        `https://location-selector.labs.crio.do/country=${selectedCountry}/state=${state}/cities`
+      );
+      const data: string[] = await res.json();
+      setCities(data);
+    } catch (err) {
+      console.error("Cities error:", err);
+    }
+  };
+
+  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCity(e.target.value);
   };
 
   return (
@@ -59,7 +72,6 @@ function App() {
       <h1>Select Location</h1>
 
       <div className="dropdown-container">
-        {/* Country */}
         <select value={selectedCountry} onChange={handleCountryChange}>
           <option value="">Select Country</option>
           {countries.map((country) => (
@@ -69,7 +81,6 @@ function App() {
           ))}
         </select>
 
-        {/* State */}
         <select
           value={selectedState}
           onChange={handleStateChange}
@@ -83,10 +94,9 @@ function App() {
           ))}
         </select>
 
-        {/* City */}
         <select
           value={selectedCity}
-          onChange={(e) => setSelectedCity(e.target.value)}
+          onChange={handleCityChange}
           disabled={!selectedState}
         >
           <option value="">Select City</option>
@@ -98,7 +108,6 @@ function App() {
         </select>
       </div>
 
-      {/* Final Output */}
       {selectedCity && (
         <h2>
           You selected {selectedCity}, {selectedState}, {selectedCountry}
